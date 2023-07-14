@@ -2,15 +2,23 @@ package com.wind.blog.config;
 
 import com.alibaba.fastjson.JSONObject;
 import com.wind.blog.entity.RestBean;
+import com.wind.blog.service.AuthorizeService;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +34,8 @@ import java.nio.charset.StandardCharsets;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Resource
+    AuthorizeService authorizeService;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws  Exception {
       return http
@@ -42,6 +52,9 @@ public class SecurityConfig {
               .and()
               .csrf()
               .disable()
+              .cors()
+              .configurationSource(this.configurationSource())
+              .and()
               .exceptionHandling()
               .authenticationEntryPoint(this::onAuthenticationFailure)
               .and()
@@ -49,7 +62,30 @@ public class SecurityConfig {
 
     }
 
-   
+    private CorsConfigurationSource configurationSource() {
+        CorsConfiguration cors = new CorsConfiguration();
+        cors.addAllowedOriginPattern("*");
+        cors.setAllowCredentials(true);
+        cors.addAllowedHeader("*");
+        cors.addAllowedMethod("*");
+        cors.addExposedHeader("*");
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cors);
+        return source;
+    }
+
+   @Bean
+   public BCryptPasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+   }
+
+   @Bean
+   public AuthenticationManager authenticationManager(HttpSecurity security) throws Exception {
+        return security.getSharedObject(AuthenticationManagerBuilder.class)
+                .userDetailsService(authorizeService)
+                .and()
+                .build();
+   }
 
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication
     ) throws IOException {

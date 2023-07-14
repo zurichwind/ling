@@ -1,10 +1,25 @@
-<script setup>
-
-</script>
-
 <template>
-
+  <div>
+    欢迎来到ling-blog
+  </div>
+  <div >
+    <el-button @click="logout"  type="danger" plain>退出登录</el-button>
+  </div>
 </template>
+
+<script setup>
+import {get} from "@/net";
+import {ElMessage} from "element-plus";
+import router from "@/router";
+
+const logout = () => {
+  get('/auth/logout',(message) => {
+    ElMessage.success(message)
+    router.push('/')
+  })
+
+}
+</script>
 
 <style scoped>
 

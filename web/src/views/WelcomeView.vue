@@ -12,7 +12,11 @@
       <div>欢迎来到我们的学习平台</div>
     </div>
     <div style="width: 400px;background-color: white">
-      <router-view/>
+      <router-view v-slot="{ Component }">
+        <transition name="el-fade-in-linear">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </div>
   </div>
 </template>
